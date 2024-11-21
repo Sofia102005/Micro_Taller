@@ -70,6 +70,26 @@ const agregarEventosEliminar = () => {
     });
 };
 
+const validarNota = (nota) => {
+    return nota >= 0 && nota <= 5;
+};
+
+const agregarEstudiante = (button) => {
+    const row = button.closest('tr');
+    const nota1 = parseFloat(row.querySelector('input[name="nota1"]').value);
+    const nota2 = parseFloat(row.querySelector('input[name="nota2"]').value);
+    const nota3 = parseFloat(row.querySelector('input[name="nota3"]').value);
+    const nota4 = parseFloat(row.querySelector('input[name="nota4"]').value);
+
+    if (![nota1, nota2, nota3, nota4].every(validarNota)) {
+        alert("Las notas deben estar entre 0 y 5.");
+        return;
+    }
+
+    const promedio = (nota1 + nota2 + nota3 + nota4) / 4;
+    row.querySelector('.promedio').textContent = promedio.toFixed(2);
+};
+
 document.getElementById('filtros').addEventListener('submit', (evento) => {
     evento.preventDefault();
 
@@ -78,13 +98,12 @@ document.getElementById('filtros').addEventListener('submit', (evento) => {
         nombre: document.getElementById('nombre').value,
         email: document.getElementById('email').value,
         estado: document.getElementById('estado').value,
-        rango_min: document.getElementById('rango_min').value,
-        rango_max: document.getElementById('rango_max').value,
+        rango_min: document.getElementById('rango_min') ? document.getElementById('rango_min').value : undefined,
+        rango_max: document.getElementById('rango_max') ? document.getElementById('rango_max').value : undefined,
         sin_notas: document.getElementById('sin_notas').checked ? 1 : 0,
     };
 
     cargarEstudiantes(parametrosBusqueda);
 });
-
 
 cargarEstudiantes();

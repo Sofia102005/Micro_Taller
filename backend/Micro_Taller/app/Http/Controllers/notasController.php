@@ -15,15 +15,33 @@ class NotaController extends Controller
 
     public function notasPorEstudiante(string $codEstudiante)
     {
+        $alumno = Alumno::where('cod', $codEstudiante)->first();
+        if (!$alumno) {
+            return response()->json(['msg' => 'Estudiante no encontrado'], 404);
+        }
+
         $notas = Notas::where('codEstudiante', $codEstudiante)->get();
-        return response()->json(['data' => $notas], 200);
+
+        $promedio = $notas->avg('nota');
+        $estado = $promedio < 3 ? 'Perdió' : 'Aprobó';
+
+        return response()->json([
+            'alumno' => [
+                'codigo' => $alumno->cod,
+                'email' => $alumno->email,
+                'nombre' => $alumno->nombre,
+                'estado' => $estado,
+                'promedio' => number_format($promedio, 2),
+            ],
+            'notas' => $notas,
+        ], 200);
     }
 
     public function store(Request $request)
     {
         $dataBody = $request->validate([
             'actividad' => 'required|string|max:255',
-            'nota' => 'required|numeric|between:0,5', 
+            'nota' => 'required|numeric|between:0,5|regex:/^\d+(\.\d{1,2})?$/', 
             'codEstudiante' => 'required|string|max:255|exists:estudiantes,cod', 
         ]);
 
@@ -44,7 +62,7 @@ class NotaController extends Controller
     {
         $dataBody = $request->validate([
             'actividad' => 'sometimes|required|string|max:255',
-            'nota' => 'sometimes|required|numeric|between:0,5', // Asegúrate de que la nota esté entre 0 y 5
+            'nota' => 'sometimes|required|numeric|between:0,5|regex:/^\d+(\.\d{1,2})?$/', 
         ]);
 
         $nota = Notas::find($id);
@@ -81,5 +99,46 @@ class NotaController extends Controller
             'bajoTres' => $bajoTres,
             'mayorIgualTres' => $mayorIgualTres,
         ]);
+    }
+
+    public function filtrarNotas(Request $request, string $codEstudiante)
+    {
+        $request->validate([
+            'actividad' => 'sometimes|string|max:255',
+            'rango_inferior' => 'sometimes|numeric|between:0,5',
+            'rango_superior' => 'sometimes|numeric|between:0,5',
+        ]);
+
+        $query = Notas::where('codEstudiante', $codEstudiante);
+
+        if ($request->has('actividad')) {
+            $query->where('actividad', 'like', '%' . $request->actividad . '%');
+        }
+
+        if ($request->has('rango_inferior') && $request->has('rango_superior')) {
+            $query->whereBetween('nota', [$request->rango_inferior, $request-> rango_superior]);
+        }
+
+        $notas = $query->get();
+
+        return response()->json(['data' => $notas], 200);
+    }
+
+    public function destacarNotas(string $codEstudiante)
+    {
+        $notas = Notas::where('codEstudiante', $codEstudiante)->get();
+
+        if ($notas->isEmpty()) {
+            return response()->json(['msg' => 'El estudiante no tiene notas registradas'], 404);
+        }
+
+        $notasDestacadas = [
+            'menorIgualDos' => $notas->where('nota', '<=', 2),
+            'mayorDosMenosTres' => $notas->where('nota', '>', 2)->where('nota', '<', 3),
+            'mayorIgualTresMenorCuatro' => $notas->where('nota', '>=', 3)->where('nota', '<', 4),
+            'mayorIgualCuatro' => $notas->where('nota', '>=', 4),
+        ];
+
+        return response()->json(['data' => $notasDestacadas], 200);
     }
 }
