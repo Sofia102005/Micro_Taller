@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Alumno extends Model
+{
+    use HasFactory;
+
+    protected $table = 'estudiantes'; // Asegúrate de que el nombre de la tabla sea correcto
+    protected $primaryKey = 'cod';
+    public $timestamps = false;
+
+    protected $fillable = ['cod', 'nombre', 'email'];
+
+    public function notas()
+    {
+        return $this->hasMany(Notas::class, 'codEstudiante', 'cod');
+    }
+
+    public function getNotaDefinitivaAttribute()
+    {
+        $notas = $this->notas;
+        if ($notas->isEmpty()) {
+            return 'No hay nota';
+        }
+        return $notas->avg('nota');
+    }
+
+    public function getEstadoAttribute()
+    {
+        return $this->nota_definitiva >= 3 ? 'Aprobado' : 'Reprobado';
+    }
+}

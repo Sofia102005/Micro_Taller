@@ -1,0 +1,90 @@
+const URL_BASE_API = "http://127.0.0.1:8000/api/pepito";
+
+const cargarEstudiantes = async (parametrosBusqueda = {}) => {
+    try {
+        const urlEstudiantes = new URL(`${URL_BASE_API}/estudiantes`);
+        
+        Object.entries(parametrosBusqueda).forEach(([clave, valor]) => {
+            if (valor) {
+                urlEstudiantes.searchParams.append(clave, valor);
+            }
+        });
+
+        const respuesta = await fetch(urlEstudiantes);
+        if (!respuesta.ok) throw new Error('Error en la respuesta de la red');
+
+        const datos = await respuesta.json();
+        const cuerpoTabla = document.querySelector("#estudiantes tbody");
+        cuerpoTabla.innerHTML = "";  
+
+        datos.data.forEach((estudiante) => {
+            const fila = document.createElement("tr");
+            fila.innerHTML = `
+                <td>${estudiante.cod}</td>
+                <td>${estudiante.nombres}</td>
+                <td>${estudiante.email}</td>
+                <td>${estudiante.nota_definitiva}</td>
+                <td>${estudiante.estado}</td>
+                <td>
+                    <button class="eliminar-btn" data-codigo="${estudiante.cod}">Eliminar</button>
+                </td>
+            `;
+            cuerpoTabla.appendChild(fila);
+        });
+
+        const resumenElemento = document.getElementById("resumen");
+        resumenElemento.innerHTML = `
+            <p>Aprobados: ${datos.resumen.aprobados}</p>
+            <p>Reprobados: ${datos.resumen.reprobados}</p>
+            <p>Sin notas: ${datos.resumen.sin_notas}</p>
+        `;
+        
+        agregarEventosEliminar();
+    } catch (error) {
+        console.error("Error al cargar los estudiantes:", error);
+    }
+};
+
+const eliminarEstudiante = async (codigoEstudiante) => {
+    if (confirm("¿Estás seguro de que deseas eliminar a este estudiante?")) {
+        try {
+            const respuesta = await fetch(`${URL_BASE_API}/estudiante/${codigoEstudiante}`, {
+                method: "DELETE",
+            });
+            const datos = await respuesta.json();
+            alert(datos.msg);
+            cargarEstudiantes();
+        } catch (error) {
+            console.error("Error al eliminar el estudiante:", error);
+        }
+    }
+};
+
+const agregarEventosEliminar = () => {
+    const botonesEliminar = document.querySelectorAll('.eliminar-btn');
+    botonesEliminar.forEach(boton => {
+        boton.addEventListener('click', () => {
+            const codigoEstudiante = boton.getAttribute('data-codigo');
+            eliminarEstudiante(codigoEstudiante);
+        });
+    });
+};
+
+document.getElementById('filtros').addEventListener('submit', (evento) => {
+    evento.preventDefault();
+
+    const parametrosBusqueda = {
+        codigo: document.getElementById('codigo').value,
+        nombre: document.getElementById('nombre').value,
+        email: document.getElementById('email').value,
+        estado: document.getElementById('estado').value,
+        rango_min: document.getElementById('rango_min').value,
+        rango_max: document.getElementById('rango_max').value,
+        sin_notas: document.getElementById('sin_notas').checked ? 1 : 0,
+    };
+
+    cargarEstudiantes(parametrosBusqueda);
+});
+
+
+cargarEstudiantes();
