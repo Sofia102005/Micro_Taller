@@ -14,7 +14,7 @@ class AlumnoController extends Controller
         // Filtrar alumnos según el parámetro de búsqueda
         if ($request->filled('filtro')) {
             $filtro = $request->input('filtro');
-            $query->where(function($q) use ($filtro) {
+            $query->where(function ($q) use ($filtro) {
                 $q->where('cod', 'like', "%$filtro%")
                   ->orWhere('nombre', 'like', "%$filtro%")
                   ->orWhere('email', 'like', "%$filtro%");
@@ -74,7 +74,7 @@ class AlumnoController extends Controller
         // Validación de datos
         $dataBody = $request->validate([
             'nombre' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|max:255|unique:estudiantes,email,' . $alumno->id, // Cambié 'cod' por 'id' para la validación
+            'email' => 'sometimes|required|email|max:255|unique:estudiantes,email,' . $alumno->cod, // Asegúrate de usar 'cod' para la validación
         ]);
 
         // Actualizar datos del alumno
@@ -104,8 +104,8 @@ class AlumnoController extends Controller
     {
         // Buscar alumno por código
         $alumno = Alumno::where('cod', $cod)->first();
-        if (!$alumno) {
-            return response ()->json(['msg' => 'Estudiante no encontrado'], 404);
+        if (!$alumno ) {
+            return response()->json(['msg' => 'Estudiante no encontrado'], 404);
         }
 
         // Eliminar todas las notas del alumno y luego el alumno

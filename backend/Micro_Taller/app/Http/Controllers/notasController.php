@@ -61,28 +61,18 @@ class NotaController extends Controller
         return response()->json(['data' => $nota], 200);
     }
 
-    // Método para mostrar el formulario de edición de una nota
-    public function edit(string $id)
+    // Método para actualizar una nota
+    public function update(Request $request, string $id)
     {
         $nota = Notas::find($id);
         if (!$nota) {
             return response()->json(['msg' => 'Nota no encontrada'], 404);
         }
-        return response()->json(['data' => $nota], 200); // Puedes cambiar esto para retornar una vista si es necesario
-    }
 
-    // Método para actualizar una nota
-    public function update(Request $request, string $id)
-    {
         $dataBody = $request->validate([
             'actividad' => 'sometimes|required|string|max:255',
             'nota' => 'sometimes|required|numeric|between:0,5|regex:/^\d+(\.\d{1,2})?$/', 
         ]);
-
-        $nota = Notas::find($id);
-        if (!$nota) {
-            return response()->json(['msg' => 'Nota no encontrada'], 404);
-        }
 
         $nota->update(array_filter($dataBody));
         return response()->json(['data' => $nota], 200);
@@ -126,7 +116,7 @@ class NotaController extends Controller
             'rango_superior' => 'sometimes|numeric|between:0,5',
         ]);
 
-        $query = Notas::where('codEstudiante', $codEstudiante);
+        $query = Notas::where('cod Estudiante', $codEstudiante);
 
         if ($request->has('actividad')) {
             $query->where('actividad', 'like', '%' . $request->actividad . '%');

@@ -94,12 +94,7 @@ const agregarEstudiante = async (button) => {
     row.querySelector('.promedio').textContent = promedio.toFixed(2);
 
     // Determinar el estado basado en el promedio
-    let estado;
-    if (promedio >= 3) {
-        estado = "Aprobado";
-    } else {
-        estado = "Reprobado";
-    }
+    const estado = promedio >= 3 ? "Aprobado" : "Reprobado";
     row.querySelector('.estado').textContent = estado;
 
     // Enviar datos al servidor
@@ -115,7 +110,7 @@ const agregarEstudiante = async (button) => {
         const respuesta = await fetch(URL_BASE_API, {
             method: 'POST',
             headers: {
-                'Content-Type : 'application/json',
+                'Content-Type': 'application/json', // Corregido el error de sintaxis
             },
             body: JSON.stringify(data),
         });

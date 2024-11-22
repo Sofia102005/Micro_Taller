@@ -2,21 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Alumno;
-use Illuminate\Http\Request;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-class EstudianteController extends Controller
+class CreateNotasTable extends Migration
 {
-   
-    public function store(Request $request)
+    public function up()
     {
-        $data = $request->validate([
-            'cod' => 'required|string|max:255|unique:estudiantes',
-            'nombre' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:estudiantes',
-        ]);
+        Schema::create('notas', function (Blueprint $table) {
+            $table->id(); // Clave primaria
+            $table->unsignedBigInteger('codEstudiante'); // Clave foránea
+            $table->string('asignatura');
+            $table->float('nota');
+            $table->timestamps();
 
-        $estudiante = Alumno::create($data);
-        return response()->json(['data' => $estudiante], 201);
+            // Definir la clave foránea
+            $table->foreign('codEstudiante')->references('cod')->on('estudiantes')->onDelete('cascade');
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('notas');
     }
 }

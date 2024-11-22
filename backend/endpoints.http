@@ -1,0 +1,14 @@
+### Obtener todos los estudiantes con filtros
+GET http://127.0.0.1:8000/api/estudiantes?codigo=12345&nombre=Juan
+Accept: application/json
+
+### Actualizar un estudiante
+PUT http://127.0.0.1:8000/api/estudiantes/12345
+Content-Type: application/json
+
+{
+    "nombres": "Juan Carlos Perez",
+    "email": "juan.c.perez@example.com",
+    "nota_definitiva": 4.8,
+    "estado": "Aprobado"
+}
