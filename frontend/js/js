@@ -1,8 +1,8 @@
-const URL_BASE_API = "http://127.0.0.1:8000/api/pepito";
+const URL_BASE_API = "http://127.0.0.1:8000/api/estudiantes"; // Cambiado a la URL correcta
 
 const cargarEstudiantes = async (parametrosBusqueda = {}) => {
     try {
-        const urlEstudiantes = new URL(`${URL_BASE_API}/estudiantes`);
+        const urlEstudiantes = new URL(URL_BASE_API);
         
         Object.entries(parametrosBusqueda).forEach(([clave, valor]) => {
             if (valor) {
@@ -23,8 +23,8 @@ const cargarEstudiantes = async (parametrosBusqueda = {}) => {
                 <td>${estudiante.cod}</td>
                 <td>${estudiante.nombres}</td>
                 <td>${estudiante.email}</td>
-                <td>${estudiante.nota_definitiva}</td>
-                <td>${estudiante.estado}</td>
+                <td>${estudiante.nota_definitiva || 'N/A'}</td>
+                <td>${estudiante.estado || 'Sin notas'}</td>
                 <td>
                     <button class="eliminar-btn" data-codigo="${estudiante.cod}">Eliminar</button>
                 </td>
@@ -48,12 +48,12 @@ const cargarEstudiantes = async (parametrosBusqueda = {}) => {
 const eliminarEstudiante = async (codigoEstudiante) => {
     if (confirm("¿Estás seguro de que deseas eliminar a este estudiante?")) {
         try {
-            const respuesta = await fetch(`${URL_BASE_API}/estudiante/${codigoEstudiante}`, {
+            const respuesta = await fetch(`${URL_BASE_API}/${codigoEstudiante}`, {
                 method: "DELETE",
             });
             const datos = await respuesta.json();
             alert(datos.msg);
-            cargarEstudiantes();
+            cargarEstudiantes(); // Recargar la lista de estudiantes después de eliminar
         } catch (error) {
             console.error("Error al eliminar el estudiante:", error);
         }
@@ -74,13 +74,17 @@ const validarNota = (nota) => {
     return nota >= 0 && nota <= 5;
 };
 
-const agregarEstudiante = (button) => {
+const agregarEstudiante = async (button) => {
     const row = button.closest('tr');
-    const nota1 = parseFloat(row.querySelector('input[name="nota1"]').value);
-    const nota2 = parseFloat(row.querySelector('input[name="nota2"]').value);
-    const nota3 = parseFloat(row.querySelector('input[name="nota3"]').value);
-    const nota4 = parseFloat(row.querySelector('input[name="nota4"]').value);
+    const codigo = row.querySelector('input[name="codigo_estudiante"]').value;
+    const nombre = row.querySelector('input[name="nombre_estudiante"]').value;
+    const email = row.querySelector('input[name="email_estudiante"]').value;
+    const nota1 = parseFloat(row.querySelector('input[name="nota1"]').value) || 0;
+    const nota2 = parseFloat(row.querySelector('input[name="nota2"]').value) || 0;
+    const nota3 = parseFloat(row.querySelector('input[name="nota3"]').value) || 0;
+    const nota4 = parseFloat(row.querySelector('input[name="nota4"]').value) || 0;
 
+    // Validar las notas
     if (![nota1, nota2, nota3, nota4].every(validarNota)) {
         alert("Las notas deben estar entre 0 y 5.");
         return;
@@ -88,6 +92,43 @@ const agregarEstudiante = (button) => {
 
     const promedio = (nota1 + nota2 + nota3 + nota4) / 4;
     row.querySelector('.promedio').textContent = promedio.toFixed(2);
+
+    // Determinar el estado basado en el promedio
+    let estado;
+    if (promedio >= 3) {
+        estado = "Aprobado";
+    } else {
+        estado = "Reprobado";
+    }
+    row.querySelector('.estado').textContent = estado;
+
+    // Enviar datos al servidor
+    const data = {
+        cod: codigo,
+        nombres: nombre,
+        email: email,
+        nota_definitiva: promedio,
+        estado: estado
+    };
+
+    try {
+        const respuesta = await fetch(URL_BASE_API, {
+            method: 'POST',
+            headers: {
+                'Content-Type : 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (!respuesta.ok) throw new Error('Error al agregar el estudiante');
+
+        const respuestaDatos = await respuesta.json();
+        alert('Estudiante agregado exitosamente');
+        cargarEstudiantes(); // Recargar la lista de estudiantes
+    } catch (error) {
+        console.error("Error al agregar el estudiante:", error);
+        alert('Error al agregar estudiante');
+    }
 };
 
 document.getElementById('filtros').addEventListener('submit', (evento) => {
@@ -97,9 +138,7 @@ document.getElementById('filtros').addEventListener('submit', (evento) => {
         codigo: document.getElementById('codigo').value,
         nombre: document.getElementById('nombre').value,
         email: document.getElementById('email').value,
-        estado: document.getElementById('estado').value,
-        rango_min: document.getElementById('rango_min') ? document.getElementById('rango_min').value : undefined,
-        rango_max: document.getElementById('rango_max') ? document.getElementById('rango_max').value : undefined,
+        estado: document.getElementById('estado') ? document.getElementById('estado').value : '',
         sin_notas: document.getElementById('sin_notas').checked ? 1 : 0,
     };
 

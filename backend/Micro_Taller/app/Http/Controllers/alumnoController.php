@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Alumno;
+use App\Models\Alumno; // Manteniendo el modelo Alumno
 use Illuminate\Http\Request;
 
 class AlumnoController extends Controller
@@ -11,22 +11,23 @@ class AlumnoController extends Controller
     {
         $query = Alumno::query();
 
+        // Filtrar alumnos según el parámetro de búsqueda
         if ($request->filled('filtro')) {
             $filtro = $request->input('filtro');
             $query->where(function($q) use ($filtro) {
                 $q->where('cod', 'like', "%$filtro%")
-                  ->orWhere('nombres', 'like', "%$filtro%")
+                  ->orWhere('nombre', 'like', "%$filtro%")
                   ->orWhere('email', 'like', "%$filtro%");
             });
         }
 
-     
+        // Obtener alumnos con sus notas
         $alumnos = $query->with('notas')->get();
 
-    
-        $totalAprobados = $alumnos->filter(fn($alumno) => $alumno->nota_definitiva >= 3)->count();
-        $totalReprobados = $alumnos->filter(fn($alumno) => $alumno->nota_definitiva < 3 && $alumno->nota_definitiva !== 'No hay nota')->count();
-        $sinNotas = $alumnos->filter(fn($alumno) => $alumno->nota_definitiva === 'No hay nota')->count();
+        // Calcular el resumen de alumnos
+        $totalAprobados = $alumnos->filter(fn($alumno) => $alumno->notas->avg('nota') >= 3)->count();
+        $totalReprobados = $alumnos->filter(fn($alumno) => $alumno->notas->avg('nota') < 3 && $alumno->notas->isNotEmpty())->count();
+        $sinNotas = $alumnos->filter(fn($alumno) => $alumno->notas->isEmpty())->count();
 
         return response()->json([
             'data' => $alumnos,
@@ -42,9 +43,9 @@ class AlumnoController extends Controller
     {
         // Validación de datos
         $dataBody = $request->validate([
-            'cod' => 'required|string|max:255|unique:estudiantes,cod',
-            'nombres' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:estudiantes,email',
+            'cod' => 'required|string|max:255|unique:estudiantes,cod', // Asegúrate que 'estudiantes' sea la tabla correcta
+            'nombre' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:estudiantes,email', // Asegúrate que 'estudiantes' sea la tabla correcta
         ]);
 
         // Crear nuevo alumno
@@ -55,7 +56,7 @@ class AlumnoController extends Controller
     public function show(string $cod)
     {
         // Buscar alumno por código
-        $alumno = Alumno::with('notas')->find($cod);
+        $alumno = Alumno::with('notas')->where('cod', $cod)->first();
         if (!$alumno) {
             return response()->json(['msg' => 'Estudiante no encontrado'], 404);
         }
@@ -65,15 +66,15 @@ class AlumnoController extends Controller
     public function update(Request $request, string $cod)
     {
         // Buscar alumno por código
-        $alumno = Alumno::find($cod);
+        $alumno = Alumno::where('cod', $cod)->first();
         if (!$alumno) {
             return response()->json(['msg' => 'Estudiante no encontrado'], 404);
         }
 
         // Validación de datos
         $dataBody = $request->validate([
-            'nombres' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|max:255|unique:estudiantes,email,' . $cod,
+            'nombre' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|max:255|unique:estudiantes,email,' . $alumno->id, // Cambié 'cod' por 'id' para la validación
         ]);
 
         // Actualizar datos del alumno
@@ -84,30 +85,32 @@ class AlumnoController extends Controller
     public function destroy(string $cod)
     {
         // Buscar alumno por código
-        $alumno = Alumno::find($cod);
+        $alumno = Alumno::where('cod', $cod)->first();
         if (!$alumno) {
             return response()->json(['msg' => 'Estudiante no encontrado'], 404);
         }
 
+        // Verificar si el alumno tiene notas registradas
         if ($alumno->notas()->exists()) {
             return response()->json(['msg' => 'No se puede eliminar el estudiante porque tiene notas registradas.'], 403);
         }
 
+        // Eliminar alumno
         $alumno->delete();
         return response()->json(['data' => 'Estudiante eliminado'], 200);
     }
 
     public function destroyAll(string $cod)
     {
-     
-        $alumno = Alumno::find($cod);
+        // Buscar alumno por código
+        $alumno = Alumno::where('cod', $cod)->first();
         if (!$alumno) {
-            return response()->json(['msg' => 'Estudiante no encontrado'], 404);
+            return response ()->json(['msg' => 'Estudiante no encontrado'], 404);
         }
 
+        // Eliminar todas las notas del alumno y luego el alumno
         $alumno->notas()->delete();
         $alumno->delete();
         return response()->json(['data' => 'Estudiante y sus notas eliminados'], 200);
-   
     }
 }

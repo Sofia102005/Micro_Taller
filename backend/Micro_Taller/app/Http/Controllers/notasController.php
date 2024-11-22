@@ -8,11 +8,13 @@ use Illuminate\Http\Request;
 
 class NotaController extends Controller
 {
+    // Método para obtener todas las notas
     public function index()
     {
         return response()->json(['data' => Notas::all()], 200);
     }
 
+    // Método para obtener las notas por estudiante
     public function notasPorEstudiante(string $codEstudiante)
     {
         $alumno = Alumno::where('cod', $codEstudiante)->first();
@@ -21,7 +23,6 @@ class NotaController extends Controller
         }
 
         $notas = Notas::where('codEstudiante', $codEstudiante)->get();
-
         $promedio = $notas->avg('nota');
         $estado = $promedio < 3 ? 'Perdió' : 'Aprobó';
 
@@ -37,6 +38,7 @@ class NotaController extends Controller
         ], 200);
     }
 
+    // Método para registrar una nueva nota
     public function store(Request $request)
     {
         $dataBody = $request->validate([
@@ -49,6 +51,7 @@ class NotaController extends Controller
         return response()->json(['data' => $nota], 201);
     }
 
+    // Método para obtener una nota específica
     public function show(string $id)
     {
         $nota = Notas::find($id);
@@ -58,6 +61,17 @@ class NotaController extends Controller
         return response()->json(['data' => $nota], 200);
     }
 
+    // Método para mostrar el formulario de edición de una nota
+    public function edit(string $id)
+    {
+        $nota = Notas::find($id);
+        if (!$nota) {
+            return response()->json(['msg' => 'Nota no encontrada'], 404);
+        }
+        return response()->json(['data' => $nota], 200); // Puedes cambiar esto para retornar una vista si es necesario
+    }
+
+    // Método para actualizar una nota
     public function update(Request $request, string $id)
     {
         $dataBody = $request->validate([
@@ -74,6 +88,7 @@ class NotaController extends Controller
         return response()->json(['data' => $nota], 200);
     }
 
+    // Método para eliminar una nota
     public function destroy(string $id)
     {
         $nota = Notas::find($id);
@@ -84,6 +99,7 @@ class NotaController extends Controller
         return response()->json(['data' => 'Nota del alumno eliminada'], 200);
     }
 
+    // Método para obtener un resumen de notas por estudiante
     public function resumenNotas(string $codEstudiante)
     {
         $notas = Notas::where('codEstudiante', $codEstudiante)->get();
@@ -101,6 +117,7 @@ class NotaController extends Controller
         ]);
     }
 
+    // Método para filtrar notas por actividad o rango de notas
     public function filtrarNotas(Request $request, string $codEstudiante)
     {
         $request->validate([
@@ -116,7 +133,7 @@ class NotaController extends Controller
         }
 
         if ($request->has('rango_inferior') && $request->has('rango_superior')) {
-            $query->whereBetween('nota', [$request->rango_inferior, $request-> rango_superior]);
+            $query->whereBetween('nota', [$request->rango_inferior, $request->rango_superior]);
         }
 
         $notas = $query->get();
@@ -124,6 +141,7 @@ class NotaController extends Controller
         return response()->json(['data' => $notas], 200);
     }
 
+    // Método para destacar notas según criterios
     public function destacarNotas(string $codEstudiante)
     {
         $notas = Notas::where('codEstudiante', $codEstudiante)->get();
