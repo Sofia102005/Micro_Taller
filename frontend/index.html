@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/index.css">
-    <title>Gestión de Estudiantes</title>
+    <title>Gestión de Alumnos</title>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Gestión de Estudiantes</h1>
+            <h1>Gestión de Alumnos</h1>
         </header>
 
         <section>
@@ -17,33 +17,35 @@
             <form id="filtros" aria-labelledby="filtros">
                 <div class="form-group">
                     <label for="codigo">Código:</label>
-                    <input type="text" id="codigo" name="codigo" placeholder="Código del estudiante" aria-required="false">
+                    <input type="text" id="codigo" name="codigo" placeholder="Código del alumno">
                 </div>
                 <div class="form-group">
                     <label for="nombre">Nombre:</label>
-                    <input type="text" id="nombre" name="nombre" placeholder="Nombre del estudiante" aria-required="false">
+                    <input type="text" id="nombre" name="nombre" placeholder="Nombre del alumno">
                 </div>
                 <div class="form-group">
                     <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" placeholder="Email del estudiante" aria-required="false">
+                    <input type="email" id="email" name="email" placeholder="Email del alumno">
                 </div>
                 <div class="form-group">
-                    <label for="sin_notas">Estudiantes sin notas:</label>
-                    <input type="checkbox" id="sin_notas" name="sin_notas" aria-checked="false">
+                    <label for="sin_notas">Alumnos sin notas:</label>
+                    <input type="checkbox" id="sin_notas" name="sin_notas">
                 </div>
                 <button type="submit">Filtrar</button>
             </form>
         </section>
 
+      
         <section>
-            <h2>Resumen de Estudiantes</h2>
+            <h2>Resumen de Alumnos</h2>
             <div id="resumen" aria-live="polite"></div>
         </section>
 
+        
         <section>
-            <h2>Lista de Estudiantes</h2>
-            <table id="estudiantes" aria-describedby="estudiantes-descripcion">
-                <caption id="estudiantes-descripcion">Lista de estudiantes registrados con sus respectivos detalles.</caption>
+            <h2>Lista de Alumnos</h2>
+            <table id="alumnos" aria-describedby="alumnos-descripcion">
+                <caption id="alumnos-descripcion">Lista de alumnos registrados con sus respectivos detalles.</caption>
                 <thead>
                     <tr>
                         <th>Código</th>
@@ -59,23 +61,31 @@
                     </tr>
                 </thead>
                 <tbody>
+                    
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Agregar Nuevo Alumno</h2>
+            <table>
+                <tbody>
                     <tr>
-                        <td><input type="text" name="codigo_estudiante" placeholder="Código" required></td>
-                        <td><input type="text" name="nombre_estudiante" placeholder="Nombre" required></td>
-                        <td><input type="email" name="email_estudiante" placeholder="Email" required></td>
-                        <td><input type="number" name="nota1" placeholder="Nota 1" min="0" max="5" step="0.1" required></td>
-                        <td><input type="number" name="nota2" placeholder="Nota 2" min="0" max="5" step="0.1" required></td>
-                        <td><input type="number" name="nota3" placeholder="Nota 3" min="0" max="5" step="0.1" required></td>
-                        <td><input type="number" name="nota4" placeholder="Nota 4" min="0" max="5" step="0.1" required></td>
+                        <td><input type="text" name="codigo_alumno" placeholder="Código" required></td>
+                        <td><input type="text" name="nombre_alumno" placeholder="Nombre" required></td>
+                        <td><input type="email" name="email_alumno" placeholder="Email" required></td>
+                        <td><input type="number" name="nota1" placeholder="Nota 1" min="0" max="5" step="0.1"></td>
+                        <td><input type="number" name="nota2" placeholder="Nota 2" min="0" max="5" step="0.1"></td>
+                        <td><input type="number" name="nota3" placeholder="Nota 3" min="0" max="5" step="0.1"></td>
+                        <td><input type="number" name="nota4" placeholder="Nota 4" min="0" max="5" step="0.1"></td>
                         <td><span class="promedio"></span></td>
                         <td><span class="estado">Sin notas</span></td>
                         <td>
-                            <button type="button" onclick="agregarEstudiante(this)">Agregar</button>
+                            <button type="button" onclick="agregarAlumno(this)">Agregar</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
-            <button type="button" onclick="agregarEstudiante(this)">Guardar</button>
         </section>
     </div>
 

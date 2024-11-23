@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NotaController;
-use App\Http\Controllers\EstudianteController;
+use App\Http\Controllers\AlumnoController; // Cambio a "AlumnoController"
 
 Route::get('/', function () {
     return view('welcome');
@@ -17,11 +17,11 @@ Route::prefix('notas')->group(function () {
     Route::delete('/{id}', [NotaController::class, 'destroy']); // Eliminar una nota
 });
 
-// Rutas para el controlador EstudianteController
-Route::prefix('estudiantes')->group(function () {
-    Route::get('/', [EstudianteController::class, 'index']); // Obtener todos los estudiantes
-    Route::get('/{cod}', [EstudianteController::class, 'show']); // Obtener un estudiante específico
-    Route::post('/', [EstudianteController::class, 'store']); // Crear un nuevo estudiante
-    Route::put('/{cod}', [EstudianteController::class, 'update']); // Actualizar un estudiante existente
-    Route::delete('/{cod}', [EstudianteController::class, 'destroy']); // Eliminar un estudiante
+// Rutas para el controlador AlumnoController
+Route::prefix('alumnos')->group(function () { // Cambio de 'estudiantes' a 'alumnos'
+    Route::get('/', [AlumnoController::class, 'index']); // Obtener todos los alumnos
+    Route::get('/{cod}', [AlumnoController::class, 'show']); // Obtener un alumno específico
+    Route::post('/', [AlumnoController::class, 'store']); // Crear un nuevo alumno
+    Route::put('/{cod}', [AlumnoController::class, 'update']); // Actualizar un alumno existente
+    Route::delete('/{cod}', [AlumnoController::class, 'destroy']); // Eliminar un alumno
 });

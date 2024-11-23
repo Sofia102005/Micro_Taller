@@ -9,36 +9,43 @@ class Alumno extends Model
 {
     use HasFactory;
 
-    protected $table = 'estudiantes'; // Asegúrate de que el nombre de la tabla sea correcto
-    protected $primaryKey = 'cod'; // Establece la clave primaria
-    public $timestamps = true; // Cambié a true si estás usando timestamps (created_at, updated_at)
+    // Definir la tabla asociada al modelo
+    protected $table = 'alumnos'; // Cambiado de 'estudiantes' a 'alumnos' para mantener consistencia
 
-    protected $fillable = ['cod', 'nombre', 'email']; // Campos que se pueden llenar de forma masiva
+    // Clave primaria personalizada
+    protected $primaryKey = 'cod';
 
-    // Relación con el modelo Notas
+    // Indicar que la tabla utiliza timestamps
+    public $timestamps = true;
+
+    // Campos asignables en las operaciones de creación/actualización masiva
+    protected $fillable = ['cod', 'nombres', 'email'];
+
+    // Relación: un alumno tiene muchas notas
     public function notas()
     {
-        return $this->hasMany(Notas::class, 'codEstudiante', 'cod'); // Asegúrate de que 'codEstudiante' sea el nombre correcto de la clave foránea en la tabla notas
+        return $this->hasMany(Notas::class, 'cod_estudiante', 'cod'); // Cambiado 'codEstudiante' a 'cod_estudiante' según convención
     }
 
-    // Accesor para calcular la nota definitiva
+    // Atributo personalizado para obtener la nota definitiva
     public function getNotaDefinitivaAttribute()
     {
         $notas = $this->notas;
 
         if ($notas->isEmpty()) {
-            return 'No hay nota'; // Si no hay notas, devuelve un mensaje
+            return null; // Devuelve null si no hay notas
         }
 
-        return $notas->avg('nota'); // Devuelve el promedio de las notas
+        return round($notas->avg('nota'), 2); // Devuelve el promedio de las notas con 2 decimales
     }
 
-    // Accesor para determinar el estado del alumno
+    // Atributo personalizado para calcular el estado (Aprobado/Reprobado)
     public function getEstadoAttribute()
     {
-        if ($this->nota_definitiva === 'No hay nota') {
-            return 'No hay nota'; // Si no hay nota, devuelve este mensaje
+        if ($this->nota_definitiva === null) {
+            return 'Sin notas'; // Devuelve 'Sin notas' si no hay una nota definitiva
         }
-        return $this->nota_definitiva >= 3 ? 'Aprobado' : 'Reprobado'; // Devuelve 'Aprobado' o 'Reprobado' según la nota
+
+        return $this->nota_definitiva >= 3 ? 'Aprobado' : 'Reprobado'; // Condición para definir el estado
     }
 }

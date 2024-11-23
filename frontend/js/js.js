@@ -1,32 +1,32 @@
-const URL_BASE_API = "http://127.0.0.1:8000/api/estudiantes"; // Cambiado a la URL correcta
+const URL_BASE_API = "http://127.0.0.1:8000/api/alumnos"; 
 
-const cargarEstudiantes = async (parametrosBusqueda = {}) => {
+const cargarAlumnos = async (parametrosBusqueda = {}) => {
     try {
-        const urlEstudiantes = new URL(URL_BASE_API);
+        const urlAlumnos = new URL(URL_BASE_API);
         
         Object.entries(parametrosBusqueda).forEach(([clave, valor]) => {
             if (valor) {
-                urlEstudiantes.searchParams.append(clave, valor);
+                urlAlumnos.searchParams.append(clave, valor);
             }
         });
 
-        const respuesta = await fetch(urlEstudiantes);
+        const respuesta = await fetch(urlAlumnos);
         if (!respuesta.ok) throw new Error('Error en la respuesta de la red');
 
         const datos = await respuesta.json();
-        const cuerpoTabla = document.querySelector("#estudiantes tbody");
+        const cuerpoTabla = document.querySelector("#alumnos tbody");
         cuerpoTabla.innerHTML = "";  
 
-        datos.data.forEach((estudiante) => {
+        datos.data.forEach((alumno) => {
             const fila = document.createElement("tr");
             fila.innerHTML = `
-                <td>${estudiante.cod}</td>
-                <td>${estudiante.nombres}</td>
-                <td>${estudiante.email}</td>
-                <td>${estudiante.nota_definitiva || 'N/A'}</td>
-                <td>${estudiante.estado || 'Sin notas'}</td>
+                <td>${alumno.cod}</td>
+                <td>${alumno.nombres}</td>
+                <td>${alumno.email}</td>
+                <td class="nota_definitiva">${alumno.nota_definitiva || 'N/A'}</td>
+                <td class="estado">${alumno.estado || 'Sin notas'}</td>
                 <td>
-                    <button class="eliminar-btn" data-codigo="${estudiante.cod}">Eliminar</button>
+                    <button type="button" class="eliminar-btn" data-codigo="${alumno.cod}" onclick="eliminarAlumno(this)">Eliminar</button>
                 </td>
             `;
             cuerpoTabla.appendChild(fila);
@@ -38,47 +38,37 @@ const cargarEstudiantes = async (parametrosBusqueda = {}) => {
             <p>Reprobados: ${datos.resumen.reprobados}</p>
             <p>Sin notas: ${datos.resumen.sin_notas}</p>
         `;
-        
-        agregarEventosEliminar();
     } catch (error) {
-        console.error("Error al cargar los estudiantes:", error);
+        console.error("Error al cargar los alumnos:", error);
     }
 };
 
-const eliminarEstudiante = async (codigoEstudiante) => {
-    if (confirm("¿Estás seguro de que deseas eliminar a este estudiante?")) {
+const eliminarAlumno = async (button) => {
+    const codigoAlumno = button.closest('tr').querySelector('td:first-child').textContent; // Obtener el código del alumno
+
+    if (confirm("¿Estás seguro de que deseas eliminar a este alumno?")) {
         try {
-            const respuesta = await fetch(`${URL_BASE_API}/${codigoEstudiante}`, {
+            const respuesta = await fetch(`${URL_BASE_API}/${codigoAlumno}`, {
                 method: "DELETE",
             });
             const datos = await respuesta.json();
             alert(datos.msg);
-            cargarEstudiantes(); // Recargar la lista de estudiantes después de eliminar
+            cargarAlumnos(); // Recargar la lista de alumnos después de eliminar
         } catch (error) {
-            console.error("Error al eliminar el estudiante:", error);
+            console.error("Error al eliminar el alumno:", error);
         }
     }
-};
-
-const agregarEventosEliminar = () => {
-    const botonesEliminar = document.querySelectorAll('.eliminar-btn');
-    botonesEliminar.forEach(boton => {
-        boton.addEventListener('click', () => {
-            const codigoEstudiante = boton.getAttribute('data-codigo');
-            eliminarEstudiante(codigoEstudiante);
-        });
-    });
 };
 
 const validarNota = (nota) => {
     return nota >= 0 && nota <= 5;
 };
 
-const agregarEstudiante = async (button) => {
+const agregarAlumno = async (button) => {
     const row = button.closest('tr');
-    const codigo = row.querySelector('input[name="codigo_estudiante"]').value;
-    const nombre = row.querySelector('input[name="nombre_estudiante"]').value;
-    const email = row.querySelector('input[name="email_estudiante"]').value;
+    const codigo = row.querySelector('input[name="codigo_alumno"]').value;
+    const nombre = row.querySelector('input[name="nombre_alumno"]').value;
+    const email = row.querySelector('input[name="email_alumno"]').value;
     const nota1 = parseFloat(row.querySelector('input[name="nota1"]').value) || 0;
     const nota2 = parseFloat(row.querySelector('input[name="nota2"]').value) || 0;
     const nota3 = parseFloat(row.querySelector('input[name="nota3"]').value) || 0;
@@ -91,13 +81,23 @@ const agregarEstudiante = async (button) => {
     }
 
     const promedio = (nota1 + nota2 + nota3 + nota4) / 4;
-    row.querySelector('.promedio').textContent = promedio.toFixed(2);
 
-    // Determinar el estado basado en el promedio
+    const promedioElemento = row.querySelector('.nota_definitiva');
+    if (promedioElemento) {
+        promedioElemento.textContent = promedio.toFixed(2);
+    } else {
+        console.error("Elemento para mostrar promedio no encontrado");
+    }
+
     const estado = promedio >= 3 ? "Aprobado" : "Reprobado";
-    row.querySelector('.estado').textContent = estado;
 
-    // Enviar datos al servidor
+    const estadoElemento = row.querySelector('.estado');
+    if (estadoElemento) {
+        estadoElemento.textContent = estado;
+    } else {
+        console.error("Elemento para mostrar estado no encontrado");
+    }
+
     const data = {
         cod: codigo,
         nombres: nombre,
@@ -110,19 +110,17 @@ const agregarEstudiante = async (button) => {
         const respuesta = await fetch(URL_BASE_API, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json', // Corregido el error de sintaxis
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify(data),
         });
-
-        if (!respuesta.ok) throw new Error('Error al agregar el estudiante');
-
+        if (!respuesta.ok) throw new Error('Error al agregar el alumno');
         const respuestaDatos = await respuesta.json();
-        alert('Estudiante agregado exitosamente');
-        cargarEstudiantes(); // Recargar la lista de estudiantes
+        alert('Alumno agregado exitosamente');
+        cargarAlumnos(); 
     } catch (error) {
-        console.error("Error al agregar el estudiante:", error);
-        alert('Error al agregar estudiante');
+        console.error("Error al agregar el alumno:", error);
+        alert('Error al agregar alumno: ' + error.message);
     }
 };
 
@@ -136,8 +134,8 @@ document.getElementById('filtros').addEventListener('submit', (evento) => {
         estado: document.getElementById('estado') ? document.getElementById('estado').value : '',
         sin_notas: document.getElementById('sin_notas').checked ? 1 : 0,
     };
-
-    cargarEstudiantes(parametrosBusqueda);
+    
+    cargarAlumnos(parametrosBusqueda);
 });
 
-cargarEstudiantes();
+cargarAlumnos();
